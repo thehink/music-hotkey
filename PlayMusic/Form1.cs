@@ -1,19 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.ComponentModel;
-using System.Data;
-using System.Drawing;
 using System.IO;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.Windows.Forms;
-using NAudio;
 using NAudio.Wave;
-using System.Diagnostics;
-using System.Threading;
 using PlayMusic.Keybinder;
 using PlayMusic.Player;
+using Microsoft.WindowsAPICodePack.Dialogs;
 
 namespace PlayMusic
 {
@@ -25,12 +17,13 @@ namespace PlayMusic
         private AudioPlaybackEngine player;
         private Settings settings;
 
-        private string targetDirectory = "./files/";
         private List<string> Files { get; } = new List<string>();
 
         private string SelectedFile { get; set; }
 
         public List<string> Ids = new List<string>();
+
+        private readonly Timer timer1 = new Timer();
 
         public Form1()
         {
@@ -39,6 +32,11 @@ namespace PlayMusic
             player = AudioPlaybackEngine.Instance;
             keybindManager = new KeybindManager();
             settings = Settings.LoadSettings();
+
+            timer1.Interval = 400;
+            timer1.Tick += timer1_Tick;
+
+            textBox2.Text = settings.fileFolder;
 
             player.PlaybackEnded += OnPlaybackEnded;
             player.PlaybackStarted += OnPlaybackStarted;
@@ -131,9 +129,9 @@ namespace PlayMusic
         {
             Files.Clear();
 
-            if (Directory.Exists(targetDirectory))
+            if (Directory.Exists(settings.fileFolder))
             {
-                string[] fileEntries = Directory.GetFiles(targetDirectory);
+                string[] fileEntries = Directory.GetFiles(settings.fileFolder);
                 foreach (string fileName in fileEntries)
                 {
                     Files.Add(Path.GetFileName(fileName));
@@ -193,7 +191,7 @@ namespace PlayMusic
 
         private void listBox1_SelectedIndexChanged(object sender, EventArgs e)
         {
-            SelectAudio(targetDirectory + listBox1.SelectedItem.ToString());
+            SelectAudio(settings.fileFolder + "\\" + listBox1.SelectedItem.ToString());
         }
 
         private void button4_Click(object sender, EventArgs e)
@@ -231,6 +229,45 @@ namespace PlayMusic
         {
             var id = dataGridView1.SelectedRows[0].Cells[0].Value.ToString();
             keybindManager.UpdateKeybind(id, SelectedFile);
+        }
+
+        private void button6_Click(object sender, EventArgs e)
+        {
+            using (CommonOpenFileDialog dialog = new CommonOpenFileDialog())
+            {
+                dialog.InitialDirectory = settings.fileFolder;
+                dialog.IsFolderPicker = true;
+                if (dialog.ShowDialog() == CommonFileDialogResult.Ok)
+                {
+                    textBox2.Text = dialog.FileName;
+                }
+            }
+        }
+
+        private void timer1_Tick(object sender, EventArgs e)
+        {
+            timer1.Stop();
+
+            if(textBox2.Text != settings.fileFolder)
+            {
+                string path = textBox2.Text;
+
+                if (path.EndsWith("\\") || path.EndsWith("/"))
+                {
+                    path = path.TrimEnd(new char[]{ '\\', '/'});
+                }
+
+                settings.fileFolder = path;
+                PopulateFiles();
+                settings.Save();
+                Console.WriteLine(path);
+            }
+        }
+
+        private void textBox2_TextChanged(object sender, EventArgs e)
+        {
+            timer1.Stop();
+            timer1.Start();
         }
     }
 }

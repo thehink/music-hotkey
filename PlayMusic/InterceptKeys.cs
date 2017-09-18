@@ -22,13 +22,13 @@ class InterceptKeys
     public static void Hook()
     {
         _hookID = SetHook(_proc, WH_KEYBOARD_LL);
-        _hookID_Mouse = SetHook(_procMouse, WH_MOUSE_LL);
+        //_hookID_Mouse = SetHook(_procMouse, WH_MOUSE_LL);
     }
 
     public static void UnHook()
     {
         UnhookWindowsHookEx(_hookID);
-        UnhookWindowsHookEx(_hookID_Mouse);
+        //UnhookWindowsHookEx(_hookID_Mouse);
     }
 
     public static IntPtr SetHook(LowLevelKeyboardProc proc, int hookLL)

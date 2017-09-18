@@ -14,6 +14,8 @@ namespace PlayMusic
 
         private static string filename = @"settings.json";
 
+        public string fileFolder = "./files";
+
         public List<Keybind> Keybinds = new List<Keybind>();
 
         public static Settings settings;
